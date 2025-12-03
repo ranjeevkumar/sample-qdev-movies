@@ -69,4 +69,88 @@ public class MovieService {
         }
         return Optional.ofNullable(movieMap.get(id));
     }
+
+    /**
+     * Searches for movies based on provided criteria with pirate flair!
+     * Arrr! This method be searchin' through our treasure chest of movies, matey!
+     * 
+     * @param name Movie name to search for (partial match, case-insensitive)
+     * @param id Specific movie ID to find
+     * @param genre Genre to filter by (partial match, case-insensitive)
+     * @return List of movies matching the search criteria
+     */
+    public List<Movie> searchMovies(String name, Long id, String genre) {
+        logger.info("Ahoy! Searchin' for movies with criteria - name: '{}', id: {}, genre: '{}'", 
+                   name, id, genre);
+        
+        List<Movie> results = new ArrayList<>();
+        
+        // If searchin' by ID specifically, try to find that treasure first!
+        if (id != null && id > 0) {
+            Optional<Movie> movieById = getMovieById(id);
+            if (movieById.isPresent()) {
+                Movie movie = movieById.get();
+                // Check if this movie also matches other criteria, if provided
+                if (matchesSearchCriteria(movie, name, genre)) {
+                    results.add(movie);
+                    logger.info("Arrr! Found treasure by ID: '{}'", movie.getMovieName());
+                }
+            }
+            return results;
+        }
+        
+        // Search through all movies in our treasure chest
+        for (Movie movie : movies) {
+            if (matchesSearchCriteria(movie, name, genre)) {
+                results.add(movie);
+            }
+        }
+        
+        logger.info("Shiver me timbers! Found {} movies matching yer search criteria", results.size());
+        return results;
+    }
+
+    /**
+     * Checks if a movie matches the search criteria
+     * 
+     * @param movie The movie to check
+     * @param name Name criteria (can be null)
+     * @param genre Genre criteria (can be null)
+     * @return true if movie matches all provided criteria
+     */
+    private boolean matchesSearchCriteria(Movie movie, String name, String genre) {
+        // Check name criteria (partial match, case-insensitive)
+        if (name != null && !name.trim().isEmpty()) {
+            String searchName = name.trim().toLowerCase();
+            String movieName = movie.getMovieName().toLowerCase();
+            if (!movieName.contains(searchName)) {
+                return false;
+            }
+        }
+        
+        // Check genre criteria (partial match, case-insensitive)
+        if (genre != null && !genre.trim().isEmpty()) {
+            String searchGenre = genre.trim().toLowerCase();
+            String movieGenre = movie.getGenre().toLowerCase();
+            if (!movieGenre.contains(searchGenre)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Gets all unique genres from our movie collection
+     * Useful for populating search dropdowns, ye savvy pirate!
+     * 
+     * @return List of unique genres
+     */
+    public List<String> getAllGenres() {
+        return movies.stream()
+                .map(Movie::getGenre)
+                .distinct()
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
